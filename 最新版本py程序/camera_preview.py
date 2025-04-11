@@ -1,7 +1,9 @@
-# 打开相机实时画面
+print("\n\033[93m【相机预览与参数查看程序：实时预览摄像头画面，显示驱动信息和参数表格】\033[0m\n")
+
 import os
 import cv2
 import subprocess
+from prettytable import PrettyTable
 
 # 十六进制参数 ID 与中文名称的映射
 PARAM_MAP = {
@@ -26,12 +28,12 @@ PARAM_MAP = {
 # 菜单参数选项的预设值映射
 MENU_OPTIONS_MAP = {
     "0x00980918": {
-        "options": {0: "禁用", 1: "50 Hz", 2: "60 Hz"},
-        "note": "；".join([f"{k}: {v}" for k, v in {0: "禁用", 1: "50 Hz", 2: "60 Hz"}.items()])
+        "options": {0: "表示禁用", 1: "表示 50Hz", 2: "表示 60Hz"},
+        "note": "；".join([f"{k}: {v}" for k, v in {0: "表示禁用", 1: "表示 50Hz", 2: "表示 60Hz"}.items()])
     },
     "0x009a0901": {
-        "options": {1: "手动", 3: "光圈优先"},
-        "note": "；".join([f"{k}: {v}" for k, v in {1: "手动", 3: "光圈优先"}.items()])
+        "options": {1: "表示手动模式", 3: "表示光圈优先模式"},
+        "note": "；".join([f"{k}: {v}" for k, v in {1: "表示手动模式", 3: "表示光圈优先模式"}.items()])
     },
     "0x0098090c": {"note": "0 关闭，1 开启"},
     "0x009a0903": {"note": "0 关闭，1 开启"},
@@ -75,22 +77,22 @@ def get_driver_info(device_path):
             text=True,
             check=True
         )
-        output = result.stdout.split('\n')
+        output = result.stdout.split('\n') # 按行分割
         driver_info = {}
 
         for line in output: # 逐行解析
-            line = line.strip()
-            if line.startswith("Driver name"):
-                driver_info["DriverName"] = line.split(':', 1)[1].strip()
-            elif line.startswith("Card type"):
-                driver_info["DeviceModel"] = line.split(':', 1)[1].strip()
-            elif line.startswith("Bus info"):
-                driver_info["BusInfo"] = line.split(':', 1)[1].strip()
-            elif line.startswith("Driver version"):
-                driver_info["DriverVersion"] = line.split(':', 1)[1].strip()
-            elif line.startswith("Width/Height"):
-                parts = line.split(':', 1)[1].strip().split()
-                if parts:
+            line = line.strip() # 去除首尾空格
+            if line.startswith("Driver name"): # 匹配驱动名称
+                driver_info["DriverName"] = line.split(':', 1)[1].strip() # 驱动名称
+            elif line.startswith("Card type"): # 匹配设备型号
+                driver_info["DeviceModel"] = line.split(':', 1)[1].strip() # 设备型号
+            elif line.startswith("Bus info"): # 匹配总线信息
+                driver_info["BusInfo"] = line.split(':', 1)[1].strip() # 总线信息
+            elif line.startswith("Driver version"): # 匹配驱动版本
+                driver_info["DriverVersion"] = line.split(':', 1)[1].strip() # 驱动版本
+            elif line.startswith("Width/Height"): # 匹配分辨率
+                parts = line.split(':', 1)[1].strip().split() # 分割分辨率
+                if parts: # 匹配分辨率
                     res_str = parts[0]
                     if '/' in res_str:
                         width, height = res_str.split('/')
@@ -99,22 +101,22 @@ def get_driver_info(device_path):
                     else:
                         width, height = res_str, '未知'
                     driver_info["Resolution"] = f"{width}×{height}"
-            elif line.startswith("Pixel Format"):
+            elif line.startswith("Pixel Format"): # 匹配像素格式
                 pixel_format_part = line.split(':', 1)[1].strip()
                 pixel_format = pixel_format_part.split()[0].strip("'")
                 driver_info["PixelFormat"] = f"{pixel_format} (4:2:2)"
-            elif line.startswith("Frames per second"):
+            elif line.startswith("Frames per second"): # 匹配帧率
                 parts = line.split(':', 1)[1].strip().split()
                 driver_info["FrameRate"] = parts[0] + " " + parts[1][1:] if len(parts) >= 2 else parts[0]
 
-        return driver_info
+        return driver_info # 返回驱动信息
 
     except subprocess.CalledProcessError as e:
         print(f"获取驱动信息失败: {e.stderr}")
         return {}
 
 
-def parse_v4l2_controls(device_path):
+def parse_v4l2_controls(device_path): # 解析参数
     """获取摄像头参数"""
     try:
         result = subprocess.run(
@@ -176,7 +178,7 @@ def convert_to_table(all_controls): # 解析为表格格式
 
         # 处理备注信息
         note = ""
-        if param_id in MENU_OPTIONS_MAP:
+        if param_id in MENU_OPTIONS_MAP: # 匹配菜单选项
             note = MENU_OPTIONS_MAP[param_id].get("note", "")
         elif param_type == "menu":
             note = "；".join([f"{i}: {opt}" for i, opt in enumerate(menu_options)])
@@ -205,10 +207,10 @@ def convert_to_table(all_controls): # 解析为表格格式
             note
         ])
 
-    return table
+    return table # 返回表格
 
 
-def print_driver_info(driver_info, device_index):
+def print_driver_info(driver_info, device_index): # 打印驱动信息
     """打印驱动信息"""
     print(f"摄像头 {device_index} 驱动信息:")
     print(f"驱动名称\t{driver_info.get('DriverName', '未知')}")
@@ -220,38 +222,14 @@ def print_driver_info(driver_info, device_index):
     print(f"帧率\t{driver_info.get('FrameRate', '未知')}")
     print()
 
-
-# 菜单选项映射
-def print_parameter_table(table, device_index):
-    column_widths = {
-        "中文名称": 20,
-        "英文名称": 30,
-        "参数 ID": 16,
-        "类型": 8,
-        "最小值": 8,
-        "最大值": 8,
-        "步长": 6,
-        "默认值": 8,
-        "当前值": 8,
-        "备注": 20
-    }
-
-    # 打印表头（左对齐）
-    header = "".join([f"{name:<{width}}" for name, width in column_widths.items()])
-    print(f"摄像头 {device_index} 参数信息:")
-    print(header)
-    print("-" * len(header))
-
+def print_parameter_table(table, device_index): # 打印参数表格
+    table_obj = PrettyTable()
+    table_obj.field_names = ["中文名称", "英文名称", "参数 ID", "类型", "最小值", "最大值", "步长", "默认值", "当前值", "备注"]
     for row in table:
-        formatted_row = []
-        for i, col in enumerate(row):
-            col_name = ["中文名称", "英文名称", "参数 ID", "类型", "最小值", "最大值", "步长", "默认值", "当前值", "备注"][i]
-            # 强制左对齐，截断过长内容（如需完整显示可删除[:column_widths[col_name]]）
-            formatted_col = f"{col[:column_widths[col_name]]:<{column_widths[col_name]}}"
-            formatted_row.append(formatted_col)
-        print("".join(formatted_row))
+        table_obj.add_row(row)
+    print(f"摄像头 {device_index} 参数信息:")
+    print(table_obj)
     print()
-
 
 # 获取设备信息
 def get_device_id(device_path):
@@ -274,9 +252,9 @@ def get_device_id(device_path):
 
 
 # 主程序
-available_devices = get_available_cameras()
-caps = []
-device_ids = []
+available_devices = get_available_cameras() # 获取可用摄像头列表
+caps = [] # 保存摄像头对象
+device_ids = [] # 保存设备ID
 
 # 打开摄像头
 for idx, device_path in enumerate(available_devices):
@@ -300,7 +278,7 @@ for idx, device_path in enumerate(available_devices):
     print_driver_info(driver_info, idx)
     print_parameter_table(parameter_table, idx)
 
-
+print("\n\033[93m【预览按下 Q 键退出】\033[0m\n")
 while True:
     all_frames_read = True # 是否所有摄像头都读取到了画面
     for i, cap in enumerate(caps): # 逐个读取摄像头画面

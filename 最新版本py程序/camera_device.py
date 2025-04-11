@@ -1,10 +1,13 @@
-# 打印相机设备列表
+print("\n\033[93m【设备检测与列表程序：检测系统中所有可用摄像头，获取设备索引、节点路径及 USB 设备详细信息】\033[0m")
+print("\033[31m\033[1m【目标设备：ViTai F225-0001】\033[0m\n")
 
-import cv2 # OpenCV
-import subprocess # 执行系统命令
+import cv2  # OpenCV
+import subprocess  # 执行系统命令
 
 # 目标设备关键词
 TARGET_DEVICE_NAME = "ViTai"
+# 目标 VID - PID 组合
+TARGET_VID_PID_COMBINATIONS = ["F225-0001"]
 
 def list_cameras():
     """获取可用摄像头索引"""
@@ -30,7 +33,7 @@ def get_camera_devices():
         cmd = ["v4l2-ctl", "--list-devices"]  # 执行v4l2-ctl命令
         result = subprocess.run(cmd, capture_output=True, text=True, check=True)
         devices = []  # 存储设备节点信息
-        for block in result.stdout.strip().split('\n\n'): # 遍历设备块
+        for block in result.stdout.strip().split('\n\n'):  # 遍历设备块
             lines = block.split('\n')
             name = lines[0].strip()  # 设备名称
             nodes = [line.strip() for line in lines[1:] if '/dev/video' in line]  # 获取设备节点
@@ -45,7 +48,7 @@ def get_camera_devices():
         return []
 
 
-class USBDeviceInfo: # USB 设备信息类
+class USBDeviceInfo:  # USB 设备信息类
     def __init__(self):
         self.target_devices = []
         self.non_target_devices = []
@@ -54,7 +57,7 @@ class USBDeviceInfo: # USB 设备信息类
         """获取 USB 设备信息并分类"""
         try:
             result = subprocess.run(['lsusb'], capture_output=True, text=True, check=True)  # 执行 lsusb 命令
-            output = result.stdout.splitlines() # 获取 lsusb 命令输出
+            output = result.stdout.splitlines()  # 获取 lsusb 命令输出
             for line in output:
                 parts = line.split()
                 if len(parts) < 6:
@@ -63,6 +66,7 @@ class USBDeviceInfo: # USB 设备信息类
                 vid_pid = parts[5].split(':')
                 vid = vid_pid[0].upper()
                 pid = vid_pid[1].upper()
+                vid_pid_combination = f"{vid}-{pid}"
                 # 提取设备名称和制造商
                 device_name = ' '.join(parts[6:])
                 manufacturer = self._parse_manufacturer(device_name)
@@ -71,13 +75,17 @@ class USBDeviceInfo: # USB 设备信息类
                     "device_name": device_name,
                     "vid": vid,
                     "pid": pid,
-                    "manufacturer": manufacturer
+                    "manufacturer": manufacturer,
+                    "vid_pid_combination": vid_pid_combination
                 }
                 # 分类设备
                 if TARGET_DEVICE_NAME.lower() in device_name.lower():  # 目标设备
                     self.target_devices.append(device)
                 else:
                     self.non_target_devices.append(device)  # 非目标设备
+                # 检查是否是指定的 VID - PID 组合
+                if vid_pid_combination in TARGET_VID_PID_COMBINATIONS:
+                    print(f"\033[31m识别到指定的 VID - PID 组合: {vid_pid_combination}\033[0m")
             return self.target_devices + self.non_target_devices
         except subprocess.CalledProcessError as e:
             print(f"执行 lsusb 命令时出错: {e.stderr}")
