@@ -6,44 +6,44 @@
 
 ## 功能特性
 1. **环境自动配置**  
-   - 自动设置系统源为阿里云镜像
-   - 安装 Python 虚拟环境及依赖库（OpenCV、PyUSB 等）
-   - 自动创建桌面快捷方式
+   - 自动设置系统源为阿里云镜像，加快软件包下载速度
+   - 安装 Python 虚拟环境及依赖库，包括 OpenCV、PyUSB 等，确保运行环境的一致性
+   - 自动创建桌面快捷方式，方便用户快速启动相机调试相关程序
 
 2. **设备检测与信息展示**  
-   - 自动发现所有可用相机设备
+   - 自动发现所有可用相机设备，无需用户手动查找
    - 显示设备详细信息（VID/PID、驱动版本、分辨率等）
-   - 支持 USB 设备分类（目标设备与非目标设备）
+   - 支持 USB 设备分类，区分目标设备与非目标设备
 
 3. **参数调试功能**  
-   - 单相机参数调节（亮度/对比度/白平衡等 16 项参数）
-   - 多相机实时预览（实验性功能）
-   - 参数配置自动保存与重置
-   - 支持 V4L2 标准参数控制
+   - 单相机参数调节，涵盖亮度、对比度、白平衡等 16 项参数，满足多样化的调试需求
+   - 多相机实时预览，可同时观察多个相机的画面
+   - 参数配置自动保存与重置，方便用户恢复默认设置或继续之前的调试
+   - 支持 V4L2 标准参数控制，确保与大多数相机设备的兼容性。
 
 4. **实时预览**  
-   - 支持多窗口同步预览
-   - 可自定义分辨率和帧率
-   - 支持快捷键退出（Q 键）
+   - 支持多窗口同步预览，可同时查看多个相机的实时画面
+   - 可自定义分辨率和帧率，根据实际需求调整画面质量
+   - 支持快捷键退出（Q 键），方便用户操作
 
 
 ## 安装步骤
 ### 1. 下载脚本
 ```bash
-将本项目的脚本文件camera.sh保存到用户主目录
+将本项目的脚本文件 camera_v4.sh 保存到用户主目录
 ```
 
 ### 2. 赋予执行权限
 ```bash
-chmod +x camera.sh
+chmod +x camera_v4.sh
 ```
 
 ### 3. 运行脚本
 ```bash
-sudo ./camera.sh
+sudo ./camera_v4.sh
 ```
 - 脚本会自动处理以下操作：
-  - 创建工作目录 `~/vitai`
+  - 创建工作目录 `~/VitaiMMDD`（MMDD 为当前月日）
   - 安装系统依赖和 Python 虚拟环境
   - 生成调试脚本和配置文件
   - 添加 udev 规则确保设备权限
@@ -52,29 +52,43 @@ sudo ./camera.sh
 ## 使用方法
 ### 1. 激活虚拟环境
 ```bash
-source ~/vitai/vitai_venv/bin/activate
+source ~/VitaiMMDD/Vitai_venv/bin/activate
 ```
 
 ### 2. 查看设备列表
 ```bash
-python ~/vitai/camera_list.py
+python ~/VitaiMMDD/camera_device.py
 ```
 
 ### 3. 实时预览
 ```bash
-python ~/vitai/camera_open.py
+python ~/VitaiMMDD/camera_preview.py
 ```
 
 ### 4. 单相机调试
 ```bash
-python ~/vitai/camera_vitai.py
+python ~/VitaiMMDD/bug_v4l2.py
 ```
 
-### 5. 多相机调试（实验）
+### 5. 多相机调试
 ```bash
-python ~/vitai/camera_vitai_double.py
+python ~/VitaiMMDD/v4l2_debug.py
 ```
 
+### 6. 相机参数定义查看
+```bash
+python ~/VitaiMMDD/camera_params.py
+```
+
+### 7. OpenCV 相机调试
+```bash
+python ~/VitaiMMDD/bug_opencv.py
+```
+
+### 8. V4L2 相机快速设置
+```bash
+python ~/VitaiMMDD/v4l2_quick.py
+```
 
 ## 注意事项
 1. **权限设置**  
@@ -87,28 +101,30 @@ python ~/vitai/camera_vitai_double.py
 2. **参数设置限制**  
    - 自动曝光（0x009a0901）与手动曝光存在互斥
    - 白平衡（0x0098091a）需先关闭自动白平衡（0x0098090c）
-   - 多相机参数同步功能尚未实现
 
 3. **设备兼容性**  
-   - 非 ViTai 相机需修改 VID/PID 识别逻辑（参考 `camera_list.py`）
+   - 非 ViTai 相机需修改 VID/PID 识别逻辑（参考 `camera_device.py`）
    - 部分旧型号相机可能存在驱动兼容性问题
 
 
 ## 项目结构
 ```
-vitai/
-├── camera_list.py       # 设备扫描与信息展示
-├── camera_open.py       # 实时画面预览
-├── camera_vitai.py      # 单相机参数调试（GUI）
-├── camera_vitai_double.py # 多相机调试（实验）
-├── vitai_venv/          # Python 虚拟环境
-└── camera_params.json   # 参数配置文件
+VitaiMMDD/
+├── camera_device.py       # 相机设备检测，检测系统中所有可用摄像头，获取设备索引、节点路径及 USB 设备详细信息
+├── camera_preview.py      # 相机预览和信息，实时预览摄像头画面，显示驱动信息和参数表格
+├── camera_params.py       # 相机参数定义，定义相机支持的参数列表，展示参数详情
+├── bug_opencv.py          # OpenCV 相机调试，借助 Tkinter 界面调节摄像头参数，支持保存与重置，可实时预览
+├── v4l2_quick.py          # V4L2 相机快速设置，利用 V4L2 命令批量设置摄像头参数，提供多种模式
+├── bug_v4l2.py            # V4L2 单摄像头控制器，针对单摄像头的图形化调试工具，支持参数重置和实时显示
+├── v4l2_debug.py          # V4L2 多摄像头调试，可同时调试多个摄像头，采用多线程处理
+├── Vitai_venv/            # Python 虚拟环境
+└── 其他配置文件（如 udev 规则文件等）
 ```
 
 
 ## 常见问题解答
 ### Q1: 脚本运行失败怎么办？
-- 检查执行权限：`ls -l camera.sh` 确保有 `x` 权限
+- 检查执行权限：`ls -l camera_v4.sh` 确保有 `x` 权限
 - 确认网络连接：脚本依赖阿里云镜像源
 - 手动安装依赖：尝试运行 `sudo apt update && sudo apt upgrade`
 
@@ -123,9 +139,9 @@ vitai/
 - 参考设备文档调整参数范围
 
 ### Q4: 如何适配其他品牌相机？
-1. 修改 `camera_list.py` 中的 VID/PID 识别逻辑
+1. 修改 `camera_device.py` 中的 VID/PID 识别逻辑
 2. 更新 `v4l2-ctl` 参数映射表
-3. 调整 `camera_vitai.py` 中的参数范围
+3. 调整 `camera_params.py` 中的参数范围
 
 
 ## 参数说明
@@ -139,3 +155,12 @@ vitai/
 - 特殊参数（如电源频率）可能不同
 - 参数范围可能因设备型号而异
 - 建议使用 `v4l2-ctl -d /dev/videoX --list-ctrls` 查询具体参数
+
+## Python 脚本概述
+1. **camera_device.py**：该脚本用于检测系统中所有可用的摄像头设备。它会获取设备的索引、节点路径以及 USB 设备的详细信息，帮助用户了解系统中相机设备的基本情况。
+2. **camera_preview.py**：此脚本实现了相机画面的实时预览功能，同时会显示相机的驱动信息和参数表格。用户可以通过该脚本直观地查看相机的画面和相关参数。
+3. **camera_params.py**：主要用于定义相机支持的参数列表，并展示这些参数的详细信息。用户可以通过该脚本来了解相机所支持的各项参数。
+4. **bug_opencv.py**：借助 Tkinter 界面，该脚本提供了一个图形化的调试工具，用于调节摄像头的参数。它支持参数的保存与重置操作，并且可以实时预览摄像头画面。
+5. **v4l2_quick.py**：利用 V4L2 命令，该脚本可以批量设置摄像头的参数，并提供多种设置模式。用户可以根据需求快速设置相机参数。
+6. **bug_v4l2.py**：这是一个针对单摄像头的图形化调试工具。它支持参数的重置和实时显示功能，方便用户对单个相机进行调试。
+7. **v4l2_debug.py**：可同时对多个摄像头进行调试，采用多线程处理的方式，确保各个摄像头的调试互不干扰，实现多相机的并行调试。 
