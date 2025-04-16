@@ -30,17 +30,17 @@
 ## 安装步骤
 ### 1. 下载脚本
 ```bash
-将本项目的脚本文件 camera_v4.sh 保存到用户主目录
+将本项目的脚本文件 camera.sh 保存到用户主目录
 ```
 
 ### 2. 赋予执行权限
 ```bash
-chmod +x camera_v4.sh
+chmod +x camera.sh
 ```
 
 ### 3. 运行脚本
 ```bash
-sudo ./camera_v4.sh
+sudo ./camera.sh
 ```
 - 脚本会自动处理以下操作：
   - 创建工作目录 `~/VitaiMMDD`（MMDD 为当前月日）
@@ -88,6 +88,11 @@ python ~/VitaiMMDD/bug_opencv.py
 ### 8. V4L2 相机快速设置
 ```bash
 python ~/VitaiMMDD/v4l2_quick.py
+```
+
+### 9. V4L2 多参数方案
+```bash
+python ~/VitaiMMDD/scheme_test.py
 ```
 
 ## 注意事项

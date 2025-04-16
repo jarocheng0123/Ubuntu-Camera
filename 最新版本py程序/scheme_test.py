@@ -13,17 +13,18 @@ from threading import Thread, Event, Lock
 # 全局配置
 MAX_FPS = 30  # 最大帧率
 
-# "方案"：[亮度,对比度,色调,饱和度,清晰度,伽马,白平衡,自动白平衡,逆光对比,增益,电力线频率,焦点,自动对焦,曝光,自动曝光,动态帧率曝光]
-SCHEMES = {
-    "默认值": [-39, 39, 0, 72, 75, 300, 6500, 1, 0, 64, 1, 68, 1, 20, 3, 0],
-    "方案1": [-64, 39, 0, 72, 75, 300, 6000, 0, 0, 64, 1, 68, 1, 20, 1, 1],
-    "方案2": [0, 39, 0, 72, 75, 300, 6500, 1, 0, 64, 1, 68, 1, 20, 3, 0],
-}
-
 # 选择方案初始化参数
 INITIAL_SCHEME_NAME = "默认值"
 
-# 参数定义结构，只保留必要信息
+# "方案"：[亮度,对比度,饱和度,色调,自动白平衡,伽马值,增益,电源频率,白平衡,清晰度,背光补偿,自动曝光,绝对曝光时间,动态帧率曝光,绝对对焦,连续自动对焦]
+SCHEMES = {
+    "默认值": [-39, 39, 72, 0, 1, 300, 64, 1, 6500, 75, 0, 3, 20, 0, 68, 1],
+    "厂商值": [-39, 39, 72, 0, 1, 300, 64, 1, 6500, 75, 0, 1, 20, 0, 68, 1],
+    "方案1": [-64, 39, 72, 0, 0, 300, 64, 1, 6000, 75, 0, 1, 20, 1, 68, 1],
+    "方案2": [0, 39, 72, 0, 0, 300, 64, 1, 6000, 75, 0, 1, 20, 1, 68, 1],
+}
+
+# 参数定义结构
 BASE_CAMERA_PARAMS = [
     {
         "chinese_name": "亮度",
@@ -46,16 +47,6 @@ BASE_CAMERA_PARAMS = [
         "options": "",
     },
     {
-        "chinese_name": "色调",
-        "v4l2_param": "hue",
-        "hex_numbers": "0x00980903",
-        "type": "int",
-        "min": -180,
-        "max": 180,
-        "step": 1,
-        "options": "",
-    },
-    {
         "chinese_name": "饱和度",
         "v4l2_param": "saturation",
         "hex_numbers": "0x00980902",
@@ -66,33 +57,13 @@ BASE_CAMERA_PARAMS = [
         "options": "",
     },
     {
-        "chinese_name": "清晰度",
-        "v4l2_param": "sharpness",
-        "hex_numbers": "0x0098091b",
+        "chinese_name": "色调",
+        "v4l2_param": "hue",
+        "hex_numbers": "0x00980903",
         "type": "int",
-        "min": 0,
-        "max": 100,
+        "min": -180,
+        "max": 180,
         "step": 1,
-        "options": "",
-    },
-    {
-        "chinese_name": "伽马",
-        "v4l2_param": "gamma",
-        "hex_numbers": "0x00980910",
-        "type": "int",
-        "min": 100,
-        "max": 500,
-        "step": 1,
-        "options": "",
-    },
-    {
-        "chinese_name": "白平衡",
-        "v4l2_param": "white_balance_temperature",
-        "hex_numbers": "0x0098091a",
-        "type": "int",
-        "min": 2800,
-        "max": 6500,
-        "step": 10,
         "options": "",
     },
     {
@@ -105,13 +76,13 @@ BASE_CAMERA_PARAMS = [
         "step": None,
         "options": "0 表示关闭；1 表示开启",
     },
-   {
-        "chinese_name": "逆光对比",
-        "v4l2_param": "backlight_compensation",
-        "hex_numbers": "0x0098091c",
+    {
+        "chinese_name": "伽马值",
+        "v4l2_param": "gamma",
+        "hex_numbers": "0x00980910",
         "type": "int",
-        "min": 0,
-        "max": 2,
+        "min": 100,
+        "max": 500,
         "step": 1,
         "options": "",
     },
@@ -126,7 +97,7 @@ BASE_CAMERA_PARAMS = [
         "options": "",
     },
     {
-        "chinese_name": "电力线频率",
+        "chinese_name": "电源频率",
         "v4l2_param": "power_line_frequency",
         "hex_numbers": "0x00980918",
         "type": "menu",
@@ -136,32 +107,32 @@ BASE_CAMERA_PARAMS = [
         "options": "0 表示禁用；1 表示 50Hz；2 表示 60Hz",
     },
     {
-        "chinese_name": "焦点",
-        "v4l2_param": "focus_absolute",
-        "hex_numbers": "0x009a090a",
+        "chinese_name": "白平衡温度",
+        "v4l2_param": "white_balance_temperature",
+        "hex_numbers": "0x0098091a",
+        "type": "int",
+        "min": 2800,
+        "max": 6500,
+        "step": 10,
+        "options": "",
+    },
+    {
+        "chinese_name": "清晰度",
+        "v4l2_param": "sharpness",
+        "hex_numbers": "0x0098091b",
         "type": "int",
         "min": 0,
-        "max": 1023,
+        "max": 100,
         "step": 1,
         "options": "",
     },
     {
-        "chinese_name": "自动对焦",
-        "v4l2_param": "focus_automatic_continuous",
-        "hex_numbers": "0x009a090c",
-        "type": "bool",
-        "min": None,
-        "max": None,
-        "step": None,
-        "options": "0 表示关闭；1 表示开启",
-    },
-    {
-        "chinese_name": "曝光",
-        "v4l2_param": "exposure_time_absolute",
-        "hex_numbers": "0x009a0902",
+        "chinese_name": "背光补偿",
+        "v4l2_param": "backlight_compensation",
+        "hex_numbers": "0x0098091c",
         "type": "int",
         "min": 0,
-        "max": 10000,
+        "max": 2,
         "step": 1,
         "options": "",
     },
@@ -173,7 +144,17 @@ BASE_CAMERA_PARAMS = [
         "min": 0,
         "max": 3,
         "step": None,
-        "options": "1 表示关闭；3 表示开启",
+        "options": "1 表示手动模式；3 表示光圈优先模式",
+    },
+    {
+        "chinese_name": "绝对曝光时间",
+        "v4l2_param": "exposure_time_absolute",
+        "hex_numbers": "0x009a0902",
+        "type": "int",
+        "min": 0,
+        "max": 10000,
+        "step": 1,
+        "options": "",
     },
     {
         "chinese_name": "动态帧率曝光",
@@ -185,11 +166,31 @@ BASE_CAMERA_PARAMS = [
         "step": None,
         "options": "0 表示关闭；1 表示开启",
     },
+    {
+        "chinese_name": "绝对对焦",
+        "v4l2_param": "focus_absolute",
+        "hex_numbers": "0x009a090a",
+        "type": "int",
+        "min": 0,
+        "max": 1023,
+        "step": 1,
+        "options": "",
+    },
+    {
+        "chinese_name": "连续自动对焦",
+        "v4l2_param": "focus_automatic_continuous",
+        "hex_numbers": "0x009a090c",
+        "type": "bool",
+        "min": None,
+        "max": None,
+        "step": None,
+        "options": "0 表示关闭；1 表示开启",
+    }
 ]
 
 # 根据方案初始化参数
 def initialize_params_with_scheme(scheme):
-    for i, param in enumerate(BASE_CAMERA_PARAMS):
+    for i, param in enumerate(BASE_CAMERA_PARAMS): # 初始化参数
         param["default"] = scheme[i]
         param["value"] = scheme[i]
         param["setvalue"] = scheme[i]
@@ -213,7 +214,7 @@ class CameraController: # 摄像头控制器
         with self.lock:
             self.cap = cv2.VideoCapture(self.index)  # 打开摄像头
             if not self.cap.isOpened():  # 检查是否打开成功
-                return False
+                return False # 打开失败
             self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
             self._init_params()
             return True
@@ -233,7 +234,7 @@ class CameraController: # 摄像头控制器
 
     def run(self):  # 运行摄像头
         while not self.exit_event.is_set():  # 循环读取摄像头
-            with self.lock:
+            with self.lock:  # 加锁
                 if self.cap.isOpened():  # 检查摄像头是否打开
                     if time.time() - self.last_frame_time < 1 / MAX_FPS:  # 限制帧率
                         time.sleep(0.001)
@@ -380,29 +381,29 @@ class CameraControlPro(tk.Toplevel):  # 摄像头控制界面
         self.destroy()
 
 
-def list_cameras():
+def list_cameras(): # 检测摄像头
     available = []
     video_devices = [f"/dev/{d}" for d in os.listdir("/dev") if d.startswith("video")]  # 视频设备
 
     for device in video_devices:  # 检测设备
         try:
             index = int(device.split('video')[1])
-            cmd = ["udevadm", "info", "-q", "property", device]
+            cmd = ["udevadm", "info", "-q", "property", device] # 获取设备信息
             result = subprocess.run(cmd, capture_output=True, text=True)
             vid, pid = "N/A", "N/A"
-            for line in result.stdout.splitlines():
+            for line in result.stdout.splitlines():   # 解析设备信息
                 if line.startswith("ID_VENDOR_ID="):
                     vid = line.split('=')[1].strip().upper()
                 elif line.startswith("ID_MODEL_ID="):
                     pid = line.split('=')[1].strip().upper()
-            device_id = f"{vid}-{pid}" if vid != "N/A" and pid != "N/A" else "UNKNOWN"
-            available.append((index, device_id))
+            device_id = f"{vid}-{pid}" if vid != "N/A" and pid != "N/A" else "UNKNOWN" # 设备ID
+            available.append((index, device_id)) # 添加设备信息
         except Exception as e:
             print(f"设备检测错误: {str(e)}")
     return available
 
 
-def display_frames(): 
+def display_frames():  # 显示帧
     windows = {}
     while True:
         try:
@@ -410,7 +411,7 @@ def display_frames():
             if device_id not in windows:
                 cv2.namedWindow(device_id, cv2.WINDOW_NORMAL)  # 创建窗口
                 cv2.resizeWindow(device_id, 640, 480)
-            cv2.imshow(device_id, frame)
+            cv2.imshow(device_id, frame) # 显示帧
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
         except Empty:
@@ -421,8 +422,8 @@ def display_frames():
 
 
 def main():
-    global frame_queue
-    frame_queue = Queue(maxsize=2)
+    global frame_queue # 帧队列
+    frame_queue = Queue(maxsize=2) # 帧队列
     camera_info = list_cameras() # 摄像头信息
     if not camera_info:
         print("未检测到摄像头设备")
@@ -434,14 +435,14 @@ def main():
 
     controllers = [] # 相机控制器
     apps = []
-    for index, device_id in camera_info:
+    for index, device_id in camera_info: # 创建相机控制器
         camera_controller = CameraController(index, device_id)
-        if not camera_controller.initialize():
+        if not camera_controller.initialize(): # 初始化相机
             print(f"{device_id} 相机初始化失败，未开启")
             continue
         app = CameraControlPro(root, camera_controller)  # 创建窗口
         camera_thread = Thread(target=camera_controller.run, daemon=True)  # 相机线程
-        camera_thread.start()
+        camera_thread.start()  # 启动相机线程
         controllers.append(camera_controller) # 添加相机控制器
         apps.append(app)
 
