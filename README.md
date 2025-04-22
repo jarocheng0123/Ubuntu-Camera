@@ -95,6 +95,11 @@ python ~/VitaiMMDD/v4l2_quick.py
 python ~/VitaiMMDD/scheme_test.py
 ```
 
+### 10. 为 HD WebCam 特殊分辨率补充代码
+```bash
+python ~/VitaiMMDD/hd_webcam.py
+```
+
 ## 注意事项
 1. **权限设置**  
    - 首次使用需添加用户到 video 组：
@@ -148,7 +153,8 @@ VitaiMMDD/
 ├── v4l2_quick.py          # V4L2 相机快速设置，利用 V4L2 命令批量设置摄像头参数，提供多种模式
 ├── bug_v4l2.py            # V4L2 单摄像头控制器，针对单摄像头的图形化调试工具，支持参数重置和实时显示
 ├── v4l2_debug.py          # V4L2 多摄像头调试，可同时调试多个摄像头，采用多线程处理
-└── scheme_test.py         #V4L2 多摄像头多方案测试，提供多种预设参数方案，通过图形界面切换方案或手动调整参数，实时预览画面并反馈设置结果
+├── scheme_test.py         #V4L2 多摄像头多方案测试，提供多种预设参数方案，通过图形界面切换方案或手动调整参数，实时预览画面并反馈设置结果
+└── hd_webcam.py           #V4L2 多摄像头多方案测试，提供多种预设参数方案，通过图形界面切换方案或手动调整参数，实时预览画面并反馈设置结果
 ```
 
 
@@ -185,3 +191,32 @@ VitaiMMDD/
 - 特殊参数（如电源频率）可能不同
 - 参数范围可能因设备型号而异
 - 建议使用 `v4l2-ctl -d /dev/videoX --list-ctrls` 查询具体参数
+- 存在相机分辨率不同的情况，会导致相机画面显示不正常
+
+### 相机分辨率说明
+- Vitai (640X480)
+- HD WebCam (1920x1080)
+
+### 修改显示分辨率
+
+- 在函数`CameraController` `initialize`中，修改分辨率 HD WebCam
+
+```bash
+self.cap = cv2.VideoCapture(self.index)
+self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+```
+
+- 在`CameraController` `run`中，统一分辨率 Vitai
+
+```bash
+frame = cv2.resize(frame, (640, 480)) 
+```
+
+### 修改显示窗口大小
+- 在函数`display_frames`中，修改显示窗口大小
+
+```bash
+cv2.resizeWindow(device_id, 640, 480)
+```
+
